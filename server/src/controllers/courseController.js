@@ -1,7 +1,7 @@
 const prisma = require('../prisma');
 const fs = require('fs');
 const path = require('path');
-const { PDFParse } = require('pdf-parse');
+const pdf = require('pdf-parse');
 const gemini = require('../services/gemini');
 
 
@@ -54,8 +54,7 @@ const createCourse = async (req, res) => {
     if (mimeType === 'application/pdf') {
       finalSourceType = 'PDF';
       const dataBuffer = fs.readFileSync(filePath);
-      const parser = new PDFParse({ data: dataBuffer });
-      const pdfData = await parser.getText();
+      const pdfData = await pdf(dataBuffer);
       extractedText = pdfData.text;
     } else if (mimeType.startsWith('image/')) {
       finalSourceType = 'IMAGE';
