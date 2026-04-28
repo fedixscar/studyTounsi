@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Upload, Dumbbell, LogOut, Sparkles, Menu, X } from 'lucide-react'
+import { LayoutDashboard, Upload, Dumbbell, LogOut, Menu, X } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
