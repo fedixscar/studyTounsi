@@ -1,0 +1,174 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(STUDENT)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  courses            Course[]
+  quizAttempts       QuizAttempt[]
+  recapSheets        RecapSheet[]
+  studentSubmissions StudentSubmission[]
+}
+
+enum Role {
+  STUDENT
+  ADMIN
+}
+
+model Course {
+  id         String       @id @default(cuid())
+  userId     String
+  title      String
+  language   Language     @default(FR)
+  sourceType SourceType
+  sourceUrl  String?
+  status     CourseStatus @default(PROCESSING)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parts      Part[]
+  recapSheet RecapSheet?
+}
+
+enum Language {
+  FR
+  TN
+  BOTH
+}
+
+enum SourceType {
+  PDF
+  IMAGE
+  TEXT
+  YOUTUBE
+}
+
+enum CourseStatus {
+  PROCESSING
+  READY
+  ERROR
+}
+
+model Part {
+  id        String     @id @default(cuid())
+  courseId  String
+  order     Int
+  title     String
+  content   String     @db.Text
+  status    PartStatus @default(PENDING)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  course   Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  summary  Summary?
+  remark   Remark?
+  tip      Tip?
+  quiz     Quiz?
+}
+
+enum PartStatus {
+  PENDING
+  VALIDATED
+  SKIPPED
+}
+
+model Summary {
+  id      String @id @default(cuid())
+  partId  String @unique
+  content String @db.Text
+  part    Part   @relation(fields: [partId], references: [id], onDelete: Cascade)
+}
+
+model Remark {
+  id      String @id @default(cuid())
+  partId  String @unique
+  content String @db.Text
+  part    Part   @relation(fields: [partId], references: [id], onDelete: Cascade)
+}
+
+model Tip {
+  id      String @id @default(cuid())
+  partId  String @unique
+  content String @db.Text
+  part    Part   @relation(fields: [partId], references: [id], onDelete: Cascade)
+}
+
+model Quiz {
+  id        String         @id @default(cuid())
+  partId    String         @unique
+  questions Json
+  createdAt DateTime       @default(now())
+
+  part     Part          @relation(fields: [partId], references: [id], onDelete: Cascade)
+  attempts QuizAttempt[]
+}
+
+model QuizAttempt {
+  id         String   @id @default(cuid())
+  quizId     String
+  userId     String
+  score      Int
+  totalScore Int
+  passed     Boolean
+  answers    Json
+  createdAt  DateTime @default(now())
+
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model RecapSheet {
+  id        String   @id @default(cuid())
+  courseId  String   @unique
+  userId    String
+  content   Json
+  createdAt DateTime @default(now())
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Subject {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  exercises Exercise[]
+}
+
+model Exercise {
+  id          String   @id @default(cuid())
+  subjectId   String
+  title       String
+  description String   @db.Text
+  difficulty  String   @default("medium")
+  createdAt   DateTime @default(now())
+
+  subject     Subject             @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  submissions StudentSubmission[]
+}
+
+model StudentSubmission {
+  id         String   @id @default(cuid())
+  exerciseId String
+  userId     String
+  answer     String   @db.Text
+  score      Int?
+  feedback   String?  @db.Text
+  corrections Json?
+  createdAt  DateTime @default(now())
+
+  exercise Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
